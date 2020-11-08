@@ -7,7 +7,6 @@ config = {
     "aws_appsync_graphqlEndpoint": "https://4a3ahs62enczjkz5ik6fld4nxq.appsync-api.eu-west-2.amazonaws.com/graphql",
     "aws_appsync_region": "eu-west-2",
     "aws_appsync_authenticationType": "AMAZON_COGNITO_USER_POOLS",
-    "aws_appsync_apiKey": "da2-fakeApiId123456",
     "aws_user_files_s3_bucket": "pooldata211140-dev",
     "aws_user_files_s3_bucket_region": "eu-west-2",
 }
