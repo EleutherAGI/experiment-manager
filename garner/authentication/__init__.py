@@ -1,1 +1,1 @@
-from authentication import Auth
+from .authentication import Auth

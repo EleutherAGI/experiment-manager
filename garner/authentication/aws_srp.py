@@ -9,7 +9,7 @@ import re
 import boto3
 import six
 
-from exceptions import ForceChangePasswordException
+from .exceptions import ForceChangePasswordException
 
 # https://github.com/aws/amazon-cognito-identity-js/blob/master/src/AuthenticationHelper.js#L22
 N_HEX = (
@@ -127,7 +127,8 @@ class AWSSRP:
         self.client_id = client_id
         self.client_secret = client_secret
         self.client = (
-            client if client else boto3.client("cognito-idp", region_name=pool_region)
+            client if client else boto3.client(
+                "cognito-idp", region_name=pool_region)
         )
         self.big_n = hex_to_long(N_HEX)
         self.val_g = hex_to_long(G_HEX)
@@ -168,13 +169,15 @@ class AWSSRP:
         u_value = calculate_u(self.large_a_value, server_b_value)
         if u_value == 0:
             raise ValueError("U cannot be zero.")
-        username_password = "%s%s:%s" % (self.pool_id.split("_")[1], username, password)
+        username_password = "%s%s:%s" % (
+            self.pool_id.split("_")[1], username, password)
         username_password_hash = hash_sha256(username_password.encode("utf-8"))
 
         x_value = hex_to_long(hex_hash(pad_hex(salt) + username_password_hash))
         g_mod_pow_xn = pow(self.val_g, x_value, self.big_n)
         int_value2 = server_b_value - self.val_k * g_mod_pow_xn
-        s_value = pow(int_value2, self.small_a_value + u_value * x_value, self.big_n)
+        s_value = pow(int_value2, self.small_a_value +
+                      u_value * x_value, self.big_n)
         hkdf = compute_hkdf(
             bytearray.fromhex(pad_hex(s_value)),
             bytearray.fromhex(pad_hex(long_to_hex(u_value))),
@@ -199,7 +202,8 @@ class AWSSRP:
     @staticmethod
     def get_secret_hash(username, client_id, client_secret):
         message = bytearray(username + client_id, "utf-8")
-        hmac_obj = hmac.new(bytearray(client_secret, "utf-8"), message, hashlib.sha256)
+        hmac_obj = hmac.new(bytearray(client_secret, "utf-8"),
+                            message, hashlib.sha256)
         return base64.standard_b64encode(hmac_obj.digest()).decode("utf-8")
 
     def process_challenge(self, challenge_parameters):
@@ -252,7 +256,8 @@ class AWSSRP:
             ClientId=self.client_id,
         )
         if response["ChallengeName"] == self.PASSWORD_VERIFIER_CHALLENGE:
-            challenge_response = self.process_challenge(response["ChallengeParameters"])
+            challenge_response = self.process_challenge(
+                response["ChallengeParameters"])
             tokens = boto_client.respond_to_auth_challenge(
                 ClientId=self.client_id,
                 ChallengeName=self.PASSWORD_VERIFIER_CHALLENGE,
@@ -279,7 +284,8 @@ class AWSSRP:
             ClientId=self.client_id,
         )
         if response["ChallengeName"] == self.PASSWORD_VERIFIER_CHALLENGE:
-            challenge_response = self.process_challenge(response["ChallengeParameters"])
+            challenge_response = self.process_challenge(
+                response["ChallengeParameters"])
             tokens = boto_client.respond_to_auth_challenge(
                 ClientId=self.client_id,
                 ChallengeName=self.PASSWORD_VERIFIER_CHALLENGE,
@@ -288,7 +294,8 @@ class AWSSRP:
 
             if tokens["ChallengeName"] == self.NEW_PASSWORD_REQUIRED_CHALLENGE:
                 challenge_response.update(
-                    {"USERNAME": auth_params["USERNAME"], "NEW_PASSWORD": new_password}
+                    {"USERNAME": auth_params["USERNAME"],
+                        "NEW_PASSWORD": new_password}
                 )
                 new_password_response = boto_client.respond_to_auth_challenge(
                     ClientId=self.client_id,
