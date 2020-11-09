@@ -16,16 +16,14 @@ from ..config import config
 import uuid
 
 
-class Auth:
-
-    def __init__(self, username=None, private_key=None, password=None):
-
+class Auth(object):
+    def __init__(self):
         self.user_pool_id = config["aws_user_pools_id"]
         self.user_pool_region = config["aws_cognito_region"]
         self.client_id = config["aws_user_pools_web_client_id"]
 
-        self.username = username
-        self.private_key = private_key
+        self.username = None
+        self.private_key = None
 
         self.refresh_token = None
         self.token_type = None
@@ -36,9 +34,9 @@ class Auth:
         self.client = boto3.client(
             "cognito-idp", region_name=self.user_pool_region)
 
-        self.authenticate(password)
+        # self.authenticate(password)
 
-    def authenticate(self, password):
+    def authenticate(self, username, private_key=None, password=None):
         """
         Authenticate the user using the SRP protocol
         :param password: The user's passsword
@@ -47,7 +45,7 @@ class Auth:
         if not password:
             print("Enter Password")
         aws = AWSSRP(
-            username=self.username,
+            username=username,
             password=(password if password else getpass("Password:")),
             pool_id=self.user_pool_id,
             client_id=self.client_id,
@@ -56,6 +54,7 @@ class Auth:
         tokens = aws.authenticate_user('Password:')
 
         print("Authenticated")
+
         self.verify_token(tokens["AuthenticationResult"]
                           ["IdToken"], "id_token", "id")
         self.refresh_token = tokens["AuthenticationResult"]["RefreshToken"]
@@ -65,6 +64,9 @@ class Auth:
         self.id_token: tokens['AuthenticationResult']['IdToken']
         self.token_type = tokens["AuthenticationResult"]["TokenType"]
         self.access_token = tokens['AuthenticationResult']['AccessToken']
+
+        self.username = username
+        self.private_key = private_key
 
     def get_keys(self):
         if self.pool_jwk:

@@ -5,10 +5,10 @@ from ..config import config
 
 class Api:
     def __init__(self, Auth):
-        this.Auth = Auth
+        self.Auth = Auth
 
-        this.api_endpoint_url = config["aws_appsync_graphqlEndpoint"]
-        this.headers = {
+        self.api_endpoint_url = config["aws_appsync_graphqlEndpoint"]
+        self.headers = {
             'Authorization': str(self.Auth.access_token)
         }
 
