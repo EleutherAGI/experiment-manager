@@ -8,3 +8,7 @@ class ForceChangePasswordException(WarrantException):
 
 class TokenVerificationException(WarrantException):
     """Raised when token verification fails."""
+
+
+class EmailNotConfirmedException(WarrantException):
+    """Raised when token verification fails."""

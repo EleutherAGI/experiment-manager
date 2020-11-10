@@ -9,11 +9,14 @@ import requests
 from getpass import getpass
 
 from .aws_srp import AWSSRP
-from .exceptions import TokenVerificationException
+from .exceptions import TokenVerificationException, EmailNotConfirmedException
 
 from ..config import config
 
 import uuid
+
+# large portions taken from
+# https://github.com/pvizeli/pycognito/blob/master/pycognito/__init__.py
 
 
 class Auth(object):
@@ -23,7 +26,8 @@ class Auth(object):
         self.client_id = config["aws_user_pools_web_client_id"]
 
         self.username = None
-        self.private_key = None
+        self.name = None
+        self.email = None
 
         self.refresh_token = None
         self.token_type = None
@@ -36,7 +40,7 @@ class Auth(object):
 
         # self.authenticate(password)
 
-    def authenticate(self, username, private_key=None, password=None):
+    def authenticate(self, username, password=None):
         """
         Authenticate the user using the SRP protocol
         :param password: The user's passsword
@@ -53,20 +57,27 @@ class Auth(object):
         )
         tokens = aws.authenticate_user('Password:')
 
-        print("Authenticated")
-
         self.verify_token(tokens["AuthenticationResult"]
                           ["IdToken"], "id_token", "id")
         self.refresh_token = tokens["AuthenticationResult"]["RefreshToken"]
         self.verify_token(
             tokens["AuthenticationResult"]["AccessToken"], "access_token", "access"
         )
+
         self.id_token: tokens['AuthenticationResult']['IdToken']
         self.token_type = tokens["AuthenticationResult"]["TokenType"]
         self.access_token = tokens['AuthenticationResult']['AccessToken']
 
-        self.username = username
-        self.private_key = private_key
+        user = self.get_user()
+
+        if user["email_verified"] != "true":
+            raise EmailNotConfirmedException(
+                "Your email has not been verified.")
+
+        self.username = user["sub"]
+        self.name = user["name"]
+        self.email = user["email"]
+        print("Authenticated")
 
     def get_keys(self):
         if self.pool_jwk:
@@ -153,3 +164,7 @@ class Auth(object):
             self.access_token = refresh_response['AuthenticationResult']['AccessToken']
             self.id_token: refresh_response['AuthenticationResult']['IdToken']
             self.token_type: refresh_response['AuthenticationResult']['TokenType']
+
+    def get_user(self):
+        result = self.client.get_user(AccessToken=self.access_token)
+        return {item["Name"]: item["Value"] for item in result['UserAttributes']}

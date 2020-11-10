@@ -1,11 +1,10 @@
 import boto3
 import uuid
 from ..config import config
-from .exceptions import NoAuthException
 
 
-class Storage():
-    def __init__(self, Auth=None):
+class Storage(object):
+    def __init__(self, auth=None):
 
         self.cognito_client = boto3.client(
             'cognito-identity', region_name=config["aws_cognito_region"])
@@ -15,13 +14,13 @@ class Storage():
         self.aws_credentials = None
         self.s3_client = None
 
-        if Auth:
-            self.attach_auth(Auth)
+        if auth:
+            self.attach_auth(auth)
 
     def attach_auth(self, auth):
 
-        self.Auth = auth
-        self.id_token = self.Auth.id_token
+        self.auth = auth
+        self.id_token = self.auth.id_token
 
         self.identity_id = self.get_identity_id(self.id_token)
 
@@ -60,10 +59,12 @@ class Storage():
     def upload_file(self, file_path, key=None):
 
         if not self.id_token:
-            raise NoAuthException(
+            raise UserWarning(
                 "No auth object attached.")
 
-        self.Auth.check_token()
+        if self.auth.check_token():
+            self.attach_auth(self.auth)
+
         prefix = self.get_prefix()
 
         if not key:
