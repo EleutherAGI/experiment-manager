@@ -1,6 +1,7 @@
 import boto3
 import uuid
 from ..config import config
+from .exceptions import NoAuthException
 
 
 class Storage():
@@ -56,9 +57,17 @@ class Storage():
     def get_prefix(self):
         return '/'.join(["protected", self.identity_id])
 
-    def upload_file(self, file_path):
+    def upload_file(self, file_path, key=None):
+
+        if not self.id_token:
+            raise NoAuthException(
+                "No auth object attached.")
+
         self.Auth.check_token()
         prefix = self.get_prefix()
-        key = str(uuid.uuid4()) + '.' + file_path.split('.')[-1]
+
+        if not key:
+            key = str(uuid.uuid4())
+
         key = '/'.join([prefix, key])
         return self.s3_client.upload_file(file_path, config["aws_user_files_s3_bucket"], key)

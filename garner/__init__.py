@@ -9,5 +9,5 @@ api = Api()
 
 def login(username, private_key=None, password=None):
     auth.authenticate(username, private_key, password)
-    #storage = Storage(auth)
+    storage.attach_auth(auth)
     api.attach_auth(auth)
