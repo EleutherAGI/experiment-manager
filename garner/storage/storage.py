@@ -2,26 +2,38 @@ import boto3
 import uuid
 from ..config import config
 
+
 class Storage():
-    def __init__(self, Auth):
-        
-        self.cognito_client =  boto3.client('cognito-identity', region_name=config["aws_cognito_region"])
-        
-        self.id_token = Auth.id_token
-        
+    def __init__(self, Auth=None):
+
+        self.cognito_client = boto3.client(
+            'cognito-identity', region_name=config["aws_cognito_region"])
+
+        self.id_token = None
+        self.identity_id = None
+        self.aws_credentials = None
+        self.s3_client = None
+
+        if Auth:
+            self.attach_auth(Auth)
+
+    def attach_auth(self, auth):
+
+        self.Auth = auth
+        self.id_token = self.Auth.id_token
+
         self.identity_id = self.get_identity_id(self.id_token)
-        
+
         self.aws_credentials = self.get_credentials(
             self.identity_id, self.id_token
         )
-        
+
         self.s3_client = boto3.client(
             's3',
             aws_access_key_id=self.aws_credentials['AccessKeyId'],
             aws_secret_access_key=self.aws_credentials['SecretKey'],
             aws_session_token=self.aws_credentials['SessionToken'],
         )
-        
 
     def get_identity_id(self, id_token):
         provider_name = "cognito-idp.{}.amazonaws.com/{}".format(config["aws_cognito_region"],
@@ -40,11 +52,12 @@ class Storage():
             Logins={provider_name: id_token},
         )
         return creds['Credentials']
-    
+
     def get_prefix(self):
         return '/'.join(["protected", self.identity_id])
-        
+
     def upload_file(self, file_path):
+        self.Auth.check_token()
         prefix = self.get_prefix()
         key = str(uuid.uuid4()) + '.' + file_path.split('.')[-1]
         key = '/'.join([prefix, key])

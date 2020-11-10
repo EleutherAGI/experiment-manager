@@ -1,5 +1,5 @@
 class WarrantException(Exception):
-    """Base class for all pyCognito exceptions"""
+    """Base class for all Cognito exceptions"""
 
 
 class ForceChangePasswordException(WarrantException):
