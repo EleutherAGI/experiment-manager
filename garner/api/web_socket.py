@@ -15,9 +15,12 @@ from ..config import config
 class WebSocket(object):
     def __init__(self, auth=None):
 
+        self.returned = []
+
         # Subscription ID (client generated)
         self.sub_id = None
 
+        self.ws = None
         self.auth = None
         self.access_token = None
         self.api_header = None
@@ -61,24 +64,25 @@ class WebSocket(object):
 
         if self.timeout_timer:
             self.timeout_timer.cancel()
-        timeout_timer = threading.Timer(timeout_interval, lambda: ws.close())
-        timeout_timer.daemon = True
-        timeout_timer.start()
+        self.timeout_timer = threading.Timer(
+            self.timeout_interval, lambda: ws.close())
+        self.timeout_timer.daemon = True
+        self.timeout_timer.start()
 
     def on_message(self, ws, message):
         '''Socket Event Callbacks, used in WebSocketApp Constructor'''
 
-        print('### message ###')
-        print('<< ' + message)
+        # print('### message ###')
+        #print('<< ' + message)
 
         message_object = json.loads(message)
         message_type = message_object['type']
 
         if(message_type == 'ka'):
-            reset_timer(ws)
+            self.reset_timer(ws)
 
         elif(message_type == 'connection_ack'):
-            timeout_interval = int(json.dumps(
+            self.timeout_interval = int(json.dumps(
                 message_object['payload']['connectionTimeoutMs']))
 
             register = {
@@ -95,35 +99,37 @@ class WebSocket(object):
                 'type': 'start'
             }
             start_sub = json.dumps(register)
-            print('>> ' + start_sub)
+            #print('>> ' + start_sub)
             ws.send(start_sub)
 
         elif(message_type == 'data'):
-            deregister = {
-                'type': 'stop',
-                'id': self.sub_id
-            }
+            self.handle_data(message)
 
         elif(message_object['type'] == 'error'):
-            print('Error from AppSync: ' + message_object['payload'])
+            raise Exception('Error from AppSync: ' + message_object['payload'])
+
+    def handle_data(self, data):
+        self.returned.append(data['payload']['data']['onSampleCompleted'])
 
     def on_error(self, ws, error):
-        print('### error ###')
-        print(error)
+        # print('### error ###')
+        raise Exception(error)
 
     def on_close(self, ws):
-        print('### closed ###')
+        # print('### closed ###')
+        pass
 
     def on_open(self, ws):
-        print('### opened ###')
+        # print('### opened ###')
         init = {
             'type': 'connection_init'
         }
         init_conn = json.dumps(init)
-        print('>> ' + init_conn)
+        #print('>> ' + init_conn)
         ws.send(init_conn)
 
-    def connect(self, query, variables):
+    def connect(self, poolID):
+        '''Open up new websocket for poolID'''
 
         if not self.auth:
             raise UserWarning(
@@ -133,22 +139,44 @@ class WebSocket(object):
             self.attach_auth(self.auth)
 
         self.gql_subscription = json.dumps({
-            'query': query,
-            'variables': variables
+            'query': 'subscription OnSampleCompleted($poolID: String) {onSampleCompleted(poolID: $poolID) {id x y}}',
+            'variables': {"poolID": poolID}
         })
 
         connection_url = self.wss_url + '?header=' + \
             self.header_encode(self.api_header) + '&payload=e30='
 
-        print('Connecting...')
+        # print('Connecting...')
 
-        ws = websocket.WebSocketApp(connection_url,
-                                    subprotocols=['graphql-ws'],
-                                    on_message=lambda ws, msg: self.on_message(
-                                        ws, msg),
-                                    on_error=lambda ws, msg: self.on_error(
-                                        ws, msg),
-                                    on_close=lambda ws:     self.on_close(ws),
-                                    on_open=lambda ws:     self.on_open(ws))
+        # websocket.enableTrace(True)
+        self.ws = websocket.WebSocketApp(connection_url,
+                                         subprotocols=['graphql-ws'],
+                                         on_message=lambda ws, msg: self.on_message(
+                                             ws, msg),
+                                         on_error=lambda ws, msg: self.on_error(
+                                             ws, msg),
+                                         on_close=lambda ws:     self.on_close(
+                                             ws),
+                                         on_open=lambda ws:     self.on_open(ws))
 
-        ws.run_forever()
+        wst = threading.Thread(target=self.ws.run_forever)
+        wst.daemon = True
+        wst.start()
+        print('connected')
+        # ws.run_forever()
+
+    def disconnect(self):
+        '''close websocket if it is connected'''
+        if(self.ws):
+            self.ws.close()
+            self.ws = None
+            print('disconnected')
+        else:
+            raise UserWarning(
+                "Not currently connected")
+
+    def query(self):
+        '''returned all new items completed since last query (if connected)'''
+        out = self.returned
+        del self.returned[:]
+        return out
