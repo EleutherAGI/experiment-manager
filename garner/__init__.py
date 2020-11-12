@@ -1,7 +1,7 @@
 
 
 from .authentication import Auth
-from .api import Api
+from .api import Api, WebSocket
 from .storage import Storage
 
 from .pool import Pool
@@ -9,7 +9,7 @@ from .pool import Pool
 auth = Auth()
 api = Api()
 storage = Storage()
-
+webSocket = WebSocket()
 
 pool = Pool()
 
