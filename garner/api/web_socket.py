@@ -102,14 +102,13 @@ class WebSocket(object):
             #print('>> ' + start_sub)
             ws.send(start_sub)
 
+        # Handle data here
         elif(message_type == 'data'):
-            self.handle_data(message)
+            self.returned.append(
+                message_object['payload']['data']['onSampleCompleted'])
 
         elif(message_object['type'] == 'error'):
             raise Exception('Error from AppSync: ' + message_object['payload'])
-
-    def handle_data(self, data):
-        self.returned.append(data['payload']['data']['onSampleCompleted'])
 
     def on_error(self, ws, error):
         # print('### error ###')
@@ -163,7 +162,7 @@ class WebSocket(object):
         wst.daemon = True
         wst.start()
         print('connected')
-        # ws.run_forever()
+        # self.ws.run_forever()
 
     def disconnect(self):
         '''close websocket if it is connected'''
@@ -177,6 +176,6 @@ class WebSocket(object):
 
     def query(self):
         '''returned all new items completed since last query (if connected)'''
-        out = self.returned
+        out = self.returned.copy()
         del self.returned[:]
         return out
