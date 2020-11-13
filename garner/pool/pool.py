@@ -34,9 +34,13 @@ class Pool(object):
                 title
                 privateKey
                 catagory {
-                    title
-                    xtype
-                    ytype
+                    catagory
+                    xtype {
+                    data
+                    }
+                    ytype {
+                    data
+                    }
                 }
             }
             }
@@ -98,6 +102,8 @@ class Pool(object):
             "filter": {"poolID": {"eq": self.pool_id}, "labeledStatus": {"eq": "COMPLETED"}},
             "limit": limit
         }
+
+        print(self.pool_id)
 
         response = self.api.execute_gql(query, params)
 
