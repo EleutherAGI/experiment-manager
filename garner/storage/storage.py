@@ -68,7 +68,21 @@ class Storage(object):
         prefix = self.get_prefix()
 
         if not key:
-            key = str(uuid.uuid4())
+            key = str(uuid.uuid4())+'.'+file_path.split('.')[-1]
 
         key = '/'.join([prefix, key])
-        return self.s3_client.upload_file(file_path, config["aws_user_files_s3_bucket"], key)
+        self.s3_client.upload_file(
+            file_path, config["aws_user_files_s3_bucket"], key)
+        return key
+
+    def download_file(self, key):
+        if not self.id_token:
+            raise UserWarning(
+                "No auth object attached.")
+
+        if self.auth.check_token():
+            self.attach_auth(self.auth)
+
+        self.s3_client.download_file(
+            config["aws_user_files_s3_bucket"], key, 'download'+'.'+key.split('.')[-1])
+        return 'download'+'.'+key.split('.')[-1]

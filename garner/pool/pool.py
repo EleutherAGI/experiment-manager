@@ -1,3 +1,6 @@
+from ..datatypes import *
+
+
 class Pool(object):
     def __init__(self):
         self.auth = None
@@ -6,9 +9,10 @@ class Pool(object):
         self.websocket = None
 
         self.pool_id = None
-        self.pool_xtype = None
-        self.pool_ytype = None
         self.data_object = None
+
+        self.x_data_handler = None
+        self.y_data_handler = None
 
     def attach(self, auth=None, api=None, storage=None, websocket=None):
         '''attach all required modules to class object'''
@@ -70,8 +74,12 @@ class Pool(object):
 
         self.data_object = data[0]
         self.pool_id = self.data_object['id']
-        self.pool_xtype = self.data_object['catagory']['xtype']
-        self.pool_ytype = self.data_object['catagory']['ytype']
+        self.pool_key = self.data_object['privateKey']
+
+        self.x_data_handler = self.get_data_handler(
+            self.data_object['catagory']['xtype']['data'])
+        self.y_data_handler = self.get_data_handler(
+            self.data_object['catagory']['ytype']['data'])
 
     def get_backlog(self, limit=100):
         '''get backlog of already completed samples'''
@@ -81,7 +89,7 @@ class Pool(object):
 
         if not self.pool_id:
             raise UserWarning(
-                "Not connected to a pool")
+                "No pool selected")
 
         query = """query ListSamples(
                         $filter: ModelsampleFilterInput
@@ -103,7 +111,7 @@ class Pool(object):
             "limit": limit
         }
 
-        print(self.pool_id)
+        # print(self.pool_id)
 
         response = self.api.execute_gql(query, params)
 
@@ -116,20 +124,75 @@ class Pool(object):
         if len(data) == 0:
             raise UserWarning('No Samples found')
 
-        if response['data']['listSamples']['nextToken']:
+        if response['data']['listSamples']['nextToken'] and len(data) == limit:
             print('There are more samples available, try increasing the limit')
 
-        return data
+        return [(self.x_data_handler.get(sample['x']),
+                 self.y_data_handler.get(sample['y'])) for sample in data]
+
+    def put(self, x, y):
+        '''select pool to work in, with either pool_name or pool_key'''
+        if not self.auth:
+            raise UserWarning(
+                "No auth object attached.")
+
+        query = """mutation PutSample($key: String!, $input: sampleXY!) {
+            putSample(key: $key, input: $input) {
+            id
+            }
+        }"""
+
+        params = {
+            "key": self.pool_key,
+            "input": {"x": self.x_data_handler.put(x), "y": self.y_data_handler.put(y)}
+        }
+
+        response = self.api.execute_gql(query, params)
+
+        try:
+            data = response['data']['listPools']['items']
+        except:
+            raise UserWarning(
+                response['errors'][0]['message'])
 
     def connect(self):
+
+        if not self.pool_id:
+            raise UserWarning(
+                "No pool selected")
+
+        if not self.auth:
+            raise UserWarning(
+                "No auth object attached.")
+
         self.websocket.connect(self.pool_id)
 
     def disconnect(self):
         self.websocket.disconnect()
 
     def query(self):
-        return self.websocket.query()
+        '''query websocket and convert results to correct format'''
+        if not self.auth:
+            raise UserWarning(
+                "No auth object attached.")
 
-    def map_output(self, output):
+        if not self.websocket.ws:
+            raise UserWarning(
+                "Not connected to pool")
+
+        data = self.websocket.query()
+        return [(self.x_data_handler.get(sample['x']),
+                 self.y_data_handler.get(sample['y'])) for sample in data]
+
+    def get_data_handler(self, datatype):
         '''will map output to correct format given by the data-types'''
-        return output
+        switcher = {
+            'Text': Text
+        }
+
+        res = switcher.get(datatype, 'invalid')
+
+        if res == 'invalid':
+            raise NotImplementedError(f'{datatype} not implemented yet')
+
+        return res(self.storage)
