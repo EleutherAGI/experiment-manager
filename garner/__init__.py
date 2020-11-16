@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
 
+from .pool import Pool
+from .storage import Storage
+from .api import Api, WebSocket
+from .authentication import Auth
 __version__ = "0.0.3"
 
 # Used with pypi checks and other messages related to pip
 _garner_module = "garner"
 
-from .authentication import Auth
-from .api import Api, WebSocket
-from .storage import Storage
-
-from .pool import Pool
 
 auth = Auth()
 api = Api()
@@ -37,3 +36,4 @@ get_backlog = pool.get_backlog
 connect = pool.connect
 disconnect = pool.disconnect
 query = pool.query
+put = pool.put

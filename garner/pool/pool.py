@@ -14,6 +14,8 @@ class Pool(object):
         self.x_data_handler = None
         self.y_data_handler = None
 
+        self.return_x = False
+
     def attach(self, auth=None, api=None, storage=None, websocket=None):
         '''attach all required modules to class object'''
         self.auth = auth
@@ -21,7 +23,7 @@ class Pool(object):
         self.storage = storage
         self.websocket = websocket
 
-    def select_pool(self, pool_name=None, pool_key=None):
+    def select_pool(self, pool_name=None, pool_key=None, return_x=False):
         '''select pool to work in, with either pool_name or pool_key'''
         if not self.auth:
             raise UserWarning(
@@ -72,6 +74,7 @@ class Pool(object):
             raise UserWarning(
                 'multiple pools found, please use pool key instead')
 
+        self.return_x = return_x
         self.data_object = data[0]
         self.pool_id = self.data_object['id']
         self.pool_key = self.data_object['privateKey']
@@ -91,7 +94,8 @@ class Pool(object):
             raise UserWarning(
                 "No pool selected")
 
-        query = """query ListSamples(
+        if self.return_x:
+            query = """query ListSamples(
                         $filter: ModelsampleFilterInput
                         $limit: Int
                         $nextToken: String
@@ -100,6 +104,20 @@ class Pool(object):
                         items {
                             id
                             x
+                            y
+                        }
+                        nextToken
+                        }
+                    }"""
+        else:
+            query = """query ListSamples(
+                        $filter: ModelsampleFilterInput
+                        $limit: Int
+                        $nextToken: String
+                    ) {
+                        listSamples(filter: $filter, limit: $limit, nextToken: $nextToken) {
+                        items {
+                            id
                             y
                         }
                         nextToken
@@ -127,14 +145,21 @@ class Pool(object):
         if response['data']['listSamples']['nextToken'] and len(data) == limit:
             print('There are more samples available, try increasing the limit')
 
-        return [(self.x_data_handler.get(sample['x']),
-                 self.y_data_handler.get(sample['y'])) for sample in data]
+        if self.return_x:
+            return {sample['id']: (self.x_data_handler.get(sample['x']),
+                                   self.y_data_handler.get(sample['y'])) for sample in data}
+        else:
+            return {sample['id']: self.y_data_handler.get(sample['y']) for sample in data}
 
     def put(self, x, y):
         '''select pool to work in, with either pool_name or pool_key'''
         if not self.auth:
             raise UserWarning(
                 "No auth object attached.")
+
+        if not self.pool_id:
+            raise UserWarning(
+                "No pool selected")
 
         query = """mutation PutSample($key: String!, $input: sampleXY!) {
             putSample(key: $key, input: $input) {
@@ -150,12 +175,10 @@ class Pool(object):
         response = self.api.execute_gql(query, params)
 
         try:
-            data = response['data']['listPools']['items']
+            return response['data']['putSample']['id']
         except:
             raise UserWarning(
                 response['errors'][0]['message'])
-
-        return response
 
     def connect(self):
 
@@ -183,8 +206,11 @@ class Pool(object):
                 "Not connected to pool")
 
         data = self.websocket.query()
-        return [(self.x_data_handler.get(sample['x']),
-                 self.y_data_handler.get(sample['y'])) for sample in data]
+        if self.return_x:
+            return {sample['id']: (self.x_data_handler.get(sample['x']),
+                                   self.y_data_handler.get(sample['y'])) for sample in data}
+        else:
+            return {sample['id']: self.y_data_handler.get(sample['y']) for sample in data}
 
     def get_data_handler(self, datatype):
         '''will map output to correct format given by the data-types'''
