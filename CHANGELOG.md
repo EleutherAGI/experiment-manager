@@ -1,3 +1,15 @@
+## 0.0.4 (November 16, 2020)
+
+#### :bug: Bug Fix
+
+- Finally updated manifest so everything does work.
+
+## 0.0.3 (November 16, 2020)
+
+#### :bug: Bug Fix
+
+- Tried updating files to see if package would work
+
 ## 0.0.2 (November 16, 2020)
 
 #### :bug: Bug Fix

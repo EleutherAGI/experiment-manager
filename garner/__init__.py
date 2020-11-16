@@ -1,4 +1,9 @@
+# -*- coding: utf-8 -*-
 
+__version__ = "0.0.3"
+
+# Used with pypi checks and other messages related to pip
+_garner_module = "garner"
 
 from .authentication import Auth
 from .api import Api, WebSocket
