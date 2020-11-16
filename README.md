@@ -7,4 +7,4 @@ gather data smarter.
 
 [Get in contact →](https://garner.app/contact/)
 
-![Bitbucket open issues](https://img.shields.io/bitbucket/issues-raw/kipgparker/Garner-python) ![GitHub closed issues](https://img.shields.io/github/issues-closed/kipgparker/Garner-python)
+![Bitbucket open issues](https://img.shields.io/bitbucket/issues-raw/kipgparker/Garner-python) ![GitHub closed issues](https://img.shields.io/github/issues-closed/kipgparker/Garner-python) ![PyPI](https://img.shields.io/pypi/v/garner)
