@@ -3,7 +3,7 @@ class Image(object):
         self.storage = storage
 
     def get(self, raw: []) -> str:
-        download_loc = self.storage.upload_file(raw[0])
+        download_loc = self.storage.download_file(raw[0])
         return download_loc
 
     def put(self, val: str) -> []:
