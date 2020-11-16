@@ -1,3 +1,9 @@
+## 0.0.2 (November 16, 2020)
+
+#### :bug: Bug Fix
+
+- Added manifest to hopefully allow requirements to be downloaded
+
 ## 0.0.1 (November 16, 2020)
 
 #### :sparkler: First release

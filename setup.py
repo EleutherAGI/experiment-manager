@@ -8,7 +8,7 @@ with open('requirements.txt') as requirements_file:
 
 setup(
     name='garner',
-    version='0.0.1',
+    version='0.0.2',
     description="A library for interacting with the Garner API.",
     long_description=readme,
     long_description_content_type="text/markdown",
