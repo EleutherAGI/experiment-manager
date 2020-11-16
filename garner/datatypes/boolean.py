@@ -1,4 +1,4 @@
-class Text(object):
+class Boolean(object):
     def __init__(self, storage):
         self.storage = storage
 

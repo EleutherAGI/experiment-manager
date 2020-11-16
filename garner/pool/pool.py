@@ -155,6 +155,8 @@ class Pool(object):
             raise UserWarning(
                 response['errors'][0]['message'])
 
+        return response
+
     def connect(self):
 
         if not self.pool_id:
@@ -187,7 +189,10 @@ class Pool(object):
     def get_data_handler(self, datatype):
         '''will map output to correct format given by the data-types'''
         switcher = {
-            'Text': Text
+            'Text': Text,
+            'Boolean': Boolean,
+            'Image': Image,
+            'Gif': Gif
         }
 
         res = switcher.get(datatype, 'invalid')

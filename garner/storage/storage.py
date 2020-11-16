@@ -75,7 +75,7 @@ class Storage(object):
             file_path, config["aws_user_files_s3_bucket"], key)
         return key
 
-    def download_file(self, key):
+    def download_file(self, key, download_location):
         if not self.id_token:
             raise UserWarning(
                 "No auth object attached.")
@@ -84,5 +84,4 @@ class Storage(object):
             self.attach_auth(self.auth)
 
         self.s3_client.download_file(
-            config["aws_user_files_s3_bucket"], key, 'download'+'.'+key.split('.')[-1])
-        return 'download'+'.'+key.split('.')[-1]
+            config["aws_user_files_s3_bucket"], key, download_location)
