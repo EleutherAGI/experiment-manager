@@ -4,7 +4,7 @@ from .pool import Pool
 from .storage import Storage
 from .api import Api, WebSocket
 from .authentication import Auth
-__version__ = "0.0.3"
+__version__ = "0.0.5"
 
 # Used with pypi checks and other messages related to pip
 _garner_module = "garner"

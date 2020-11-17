@@ -1,3 +1,15 @@
+## 0.0.5 (November 17, 2020)
+
+#### :wave: Enhancement
+
+- Added more data handlers
+- Added sample put functionality
+- Added option to choose wether you want to recieve x back
+
+#### :bug: Bug Fix
+
+- Finally updated manifest so everything does work.
+
 ## 0.0.4 (November 16, 2020)
 
 #### :bug: Bug Fix
