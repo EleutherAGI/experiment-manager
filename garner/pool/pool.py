@@ -14,7 +14,6 @@ class Pool(object):
         self.x_data_handler = None
         self.y_data_handler = None
 
-        self.return_x = False
 
     def attach(self, auth=None, api=None, storage=None, websocket=None):
         '''attach all required modules to class object'''
@@ -23,7 +22,7 @@ class Pool(object):
         self.storage = storage
         self.websocket = websocket
 
-    def select_pool(self, pool_name=None, pool_key=None, return_x=False):
+    def select_pool(self, pool_name=None, pool_key=None):
         '''select pool to work in, with either pool_name or pool_key'''
         if not self.auth:
             raise UserWarning(
@@ -56,10 +55,12 @@ class Pool(object):
             params = {
                 "filter": {"privateKey": {"eq": pool_key}, "owner": {"eq": self.auth.username}}
             }
-        elif pool_name:
+        else:
             params = {
                 "filter": {"title": {"eq": pool_name}, "owner": {"eq": self.auth.username}}
             }
+            
+            
         response = self.api.execute_gql(query, params)
 
         try:
@@ -74,7 +75,6 @@ class Pool(object):
             raise UserWarning(
                 'multiple pools found, please use pool key instead')
 
-        self.return_x = return_x
         self.data_object = data[0]
         self.pool_id = self.data_object['id']
         self.pool_key = self.data_object['privateKey']
@@ -84,7 +84,7 @@ class Pool(object):
         self.y_data_handler = self.get_data_handler(
             self.data_object['catagory']['ytype']['data'])
 
-    def get_backlog(self, limit=100):
+    def get_backlog(self, limit=100, return_x=True):
         '''get backlog of already completed samples'''
         if not self.auth:
             raise UserWarning(
@@ -94,7 +94,7 @@ class Pool(object):
             raise UserWarning(
                 "No pool selected")
 
-        if self.return_x:
+        if return_x:
             query = """query ListSamples(
                         $filter: ModelsampleFilterInput
                         $limit: Int
@@ -145,7 +145,7 @@ class Pool(object):
         if response['data']['listSamples']['nextToken'] and len(data) == limit:
             print('There are more samples available, try increasing the limit')
 
-        if self.return_x:
+        if return_x:
             return {sample['id']: (self.x_data_handler.get(sample['x']),
                                    self.y_data_handler.get(sample['y'])) for sample in data}
         else:
@@ -195,7 +195,7 @@ class Pool(object):
     def disconnect(self):
         self.websocket.disconnect()
 
-    def query(self):
+    def query(self, return_x=False):
         '''query websocket and convert results to correct format'''
         if not self.auth:
             raise UserWarning(
@@ -206,7 +206,7 @@ class Pool(object):
                 "Not connected to pool")
 
         data = self.websocket.query()
-        if self.return_x:
+        if return_x:
             return {sample['id']: (self.x_data_handler.get(sample['x']),
                                    self.y_data_handler.get(sample['y'])) for sample in data}
         else:
