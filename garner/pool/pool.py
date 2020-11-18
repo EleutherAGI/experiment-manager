@@ -218,9 +218,9 @@ class Pool(object):
             'Text': Text,
             'Boolean': Boolean,
             'Image': Image,
-            'Double-image' DoubleImage,
-            'Double-gif' DoubleGif,
-            'Gif': Gif
+            'Double-image': DoubleImage,
+            'Gif': Gif,
+            'Double-gif': DoubleGif
         }
 
         res = switcher.get(datatype, 'invalid')
