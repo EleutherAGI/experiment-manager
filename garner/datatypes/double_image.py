@@ -17,10 +17,10 @@ class DoubleImage(object):
         return im1, im2
 
     def put(self, val: []) -> []:
-        imageio.imwrite('temp.jpg', val)
+        imageio.imwrite('temp.jpg', val[0])
         key2 = self.storage.upload_file('temp.jpg')
         os.remove('temp.jpg')
-        imageio.imwrite('temp.jpg', val)
+        imageio.imwrite('temp.jpg', val[1])
         key1 = self.storage.upload_file('temp.jpg')
         os.remove('temp.jpg')
         return [key1, key2]
