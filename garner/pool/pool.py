@@ -218,6 +218,8 @@ class Pool(object):
             'Text': Text,
             'Boolean': Boolean,
             'Image': Image,
+            'Double-image' DoubleImage,
+            'Double-gif' DoubleGif,
             'Gif': Gif
         }
 

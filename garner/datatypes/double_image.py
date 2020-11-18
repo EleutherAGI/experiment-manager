@@ -3,7 +3,7 @@ import numpy as np
 import os
 
 
-class Image(object):
+class DoubleImage(object):
     def __init__(self, storage):
         self.storage = storage
 

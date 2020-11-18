@@ -3,7 +3,7 @@ import numpy as np
 import os
 
 
-class Gif(object):
+class DoubleGif(object):
     def __init__(self, storage):
         self.storage = storage
 
