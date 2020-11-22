@@ -70,9 +70,8 @@ class Storage(object):
         if not key:
             key = str(uuid.uuid4())+'.'+file_path.split('.')[-1]
 
-        key = '/'.join([prefix, key])
         self.s3_client.upload_file(
-            file_path, config["aws_user_files_s3_bucket"], key)
+            file_path, config["aws_user_files_s3_bucket"], '/'.join([prefix, key]))
         return key
 
     def download_file(self, key, download_location):
