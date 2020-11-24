@@ -14,7 +14,6 @@ class Pool(object):
         self.x_data_handler = None
         self.y_data_handler = None
 
-
     def attach(self, auth=None, api=None, storage=None, websocket=None):
         '''attach all required modules to class object'''
         self.auth = auth
@@ -132,6 +131,8 @@ class Pool(object):
         # print(self.pool_id)
 
         response = self.api.execute_gql(query, params)
+
+        #print(response)
 
         try:
             data = response['data']['listSamples']['items']

@@ -84,4 +84,4 @@ class Storage(object):
             self.attach_auth(self.auth)
 
         self.s3_client.download_file(
-            config["aws_user_files_s3_bucket"], key, download_location)
+            config["aws_user_files_s3_bucket"], '/'.join([self.get_prefix(), key]), download_location)
