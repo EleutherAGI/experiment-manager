@@ -3,6 +3,8 @@
 Use Garner to gather data for machine learning projects in realtime, allowing your to curate and
 gather data smarter.
 
+[Garner web client](https://github.com/kipgparker/Garner)
+
 [Sign up for a free account →](https://garner.app)
 
 [Get in contact →](https://garner.app/contact/)
